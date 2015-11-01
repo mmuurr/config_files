@@ -1,0 +1,137 @@
+;;--------------------------------------------------------------------------------
+;; notes
+;;--------------------------------------------------------------------------------
+
+;; M?ELPA packages to install:
+;; * ess (Emacs Speaks Statistics, interface to R and Julia kernels)
+;; * format-sql
+;; * go-mode
+;; * julia-mode (dependecy of ess)
+;; * sql-indent
+;; * term+ (improved term and ansi-term, supports 256 colors)
+
+
+;;--------------------------------------------------------------------------------
+;; ELPA config.
+;;--------------------------------------------------------------------------------
+
+;; set to auto-load any of the ELPA-installed packages.
+;; (the alternative is to (add-to-list 'load-path "/path/to/package") for each package.)
+(package-initialize)
+
+;; additional repos (MELPA is arguably the most useful the three).
+(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+			 ("marmalade" . "https://marmalade-repo.org/packages/")
+			 ("melpa" . "http://melpa.org/packages/")))
+
+
+;;--------------------------------------------------------------------------------
+;; Tabs.
+;;--------------------------------------------------------------------------------
+
+;; uses spaces instead of tabs by default.
+;; this can break some programs, take note (e.g. Go and Makefile(s)).
+(setq-default indent-tabs-mode nil)
+
+
+;;--------------------------------------------------------------------------------
+;; Go (i.e. golang)
+;; requires package: go-mode
+;;--------------------------------------------------------------------------------
+
+(add-hook 'go-mode-hook
+	  (lambda ()
+	    (add-hook 'before-save-hook 'gofmt-before-save)
+	    (setq tab-width 4)
+	    (setq indent-tabs-mode 1)))
+
+
+;;--------------------------------------------------------------------------------
+;; SQL
+;; requires packages: format-sql and sql-indent
+;;--------------------------------------------------------------------------------
+
+(require 'sql)
+
+;; forces port prompt (for non-standard PostgreSQL ports, e.g. Redshift on 5439).
+(add-to-list 'sql-postgres-login-params '(port :default 5432))
+
+;; makes emacs recognize the .psql extension as SQL.
+(add-to-list 'auto-mode-alist
+             '("\\.psql$" . (lambda ()
+                              (sql-mode)
+                              (sql-highlight-postgres-keywords))))
+
+
+;;--------------------------------------------------------------------------------
+;; ESS config.
+;; requires package: ess (and julia as an auto-fulfilled dependency)
+;;--------------------------------------------------------------------------------
+
+(require 'ess-site)
+
+;; in default ESS mode, typing and underscore inserts an assignment arrow, which is plain dumb.
+(ess-toggle-underscore nil)
+
+;; sets `C-c w` to resize R's stdout knowledge to the width of the current Emacs window.
+(defun my-ess-post-run-hook ()
+  (ess-execute-screen-options)
+  (local-set-key "\C-cw" 'ess-execute-screen-options))
+(add-hook 'ess-post-run-hook 'my-ess-post-run-hook)
+;(put 'scroll-left 'disabled nil)
+
+;; treats open/close-parens with lists like open/close-braces and aligns the close-parens to the start of the expression.
+;(setq ess-close-paren-offset '(0))
+
+
+;;--------------------------------------------------------------------------------
+;; Window management.
+;;--------------------------------------------------------------------------------
+
+;; enable "winner-mode" (C-c <- and C-c -> jumps between frame 'states').
+(winner-mode)
+
+;; enables WindMove, which is controlled with [Shift]-[arrow] to jump between windows within a frame.
+(when (fboundp 'windmove-default-keybindings)
+  (windmove-default-keybindings))
+
+;(defun set-window-width (n)
+;  "Set the selected window's width."
+;  (adjust-window-trailing-edge (selected-window) (- n (window-width)) t))
+
+
+;;--------------------------------------------------------------------------------
+;; term and ansi-term improvements
+;; requires package: xterm+
+;;--------------------------------------------------------------------------------
+
+(require 'term+)
+(require 'xterm-256color)
+
+
+;;--------------------------------------------------------------------------------
+;; GNU Screen
+;;--------------------------------------------------------------------------------
+
+;; to get proper coloring, try:
+;; (1) include the following line in the .screenrc file:
+;;     term xterm-256color
+;; (2) test Emacs itself with M-x list-colors-display
+;; (3) test ansi-term and term (after installing and activating term+) with the following terminal command:
+;;     % tput colors ## hopefully the output is 256
+
+;; if that doesn't work, consult the instructions/tips here:
+;; http://emacswiki.org/emacs/GnuScreen
+
+;; Terminal.app's key bindings found under Terminal -> Preferences -> Settings -> Keyboard... they're user-mappable, but let's just stick with the defaults here.
+;; same for iTerm2.
+(define-key input-decode-map "\e[1;2D" [S-left])
+(define-key input-decode-map "\e[1;2C" [S-right])
+(define-key input-decode-map "\e[1;2B" [S-down])
+(define-key input-decode-map "\e[1;2A" [S-up])
+
+
+;;--------------------------------------------------------------------------------
+;; experimental area
+;;--------------------------------------------------------------------------------
+
