@@ -1,0 +1,5 @@
+## sets the command character to C-z, and with a second typing of the 'z' key, sends the literal C-z to the within-screen program.
+escape ^Zz
+
+## TERM stuff
+term xterm-256color
