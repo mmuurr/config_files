@@ -1,0 +1,48 @@
+## .bashrc
+
+## Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+## User specific aliases and functions
+export PYTHONPATH=~/opt/python/lib/python2.6/site-packages
+export R_LIBS=~/opt/R_packages
+alias ls='ls -F --color=auto' ## -F for color, *, @, /, etc.
+alias rm='rm -iv' ## -v==verbose -i==interactive
+alias pstree='pstree -c -n -p' ## -c==collapsing -n==order-of-calling -a==full-call-string -p==with-process-ID
+
+## some git stuff
+#alias gitlog='git log --graph --full-history --all --decorate --oneline --color --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s"
+alias gitlog='git log --graph --full-history --all --decorate --oneline --date=local --color --pretty=format:"%Cred%h%x09%Cgreen%d%Creset%x20%s%x20%C(cyan)(%an, %ci)"'
+
+
+##--------------------------------------------------------------------------------
+## bash PS1 (prompt) code.
+## borrowed (i.e. copied) from here: http://stackoverflow.com/questions/5687446/bash-custom-ps1-with-nice-working-directory-path
+##--------------------------------------------------------------------------------
+
+# define the awk script using heredoc notation for easy modification
+MYPSDIR_AWK=$(cat << 'EOF'
+BEGIN { FS = OFS = "/" }
+{
+   if (length($0) > 16 && NF > 4)
+      print $1,$2,".." NF-4 "..",$(NF-1),$NF
+   else
+      print $0
+}
+EOF
+)
+
+# my replacement for \w prompt expansion
+export MYPSDIR='$(echo -n "${PWD/#$HOME/~}" | awk "$MYPSDIR_AWK")'
+
+# the fancy colorized prompt: [0 user@host ~]%
+# return code is in green, user@host is in bold/white
+#export PS1='\[\e]2;\u@\H:\w\a\][\[\033[1;32m\]$?\[\033[0;0m\] \[\033[0;1m\]\u@\h\[\033[0;0m\] $(eval "echo ${MYPSDIR}")]% '
+#export PS1='[\[\033[1;32m\]$?\[\033[0;0m\] \[\033[0;1m\]\u@\h\[\033[0;0m\] $(eval "echo ${MYPSDIR}")]% '
+export PS1='[$?][\u@\h:$(eval "echo ${MYPSDIR}")]% '
+
+# set x/ssh window title as well
+#export PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*} $(eval "echo ${MYPSDIR}")\007"'
+
